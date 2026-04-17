@@ -33,10 +33,24 @@ export class VentasController {
     return this.ventasService.generarReportes();
   }
 
+  @Post()
+  @ApiResponse({ status: 201, description: 'Venta creada correctamente' })
+  @ApiResponse({ status: 400, description: 'Datos de la venta inválidos' })
+  async crearVenta(@Body() createVentaDto: CreateVentaDto): Promise<Venta> {
+    return this.ventasService.crearVenta(createVentaDto);
+  }
+
   @Get(':id')
   @ApiResponse({ status: 200, description: 'Detalle de una venta específica' })
   @ApiResponse({ status: 404, description: 'Venta no encontrada' })
-  async obtenerVentaPorId(@Param('id') id: number): Promise<Venta> {
+  async obtenerVentaPorId(@Param('id', ParseIntPipe) id: number): Promise<Venta> {
     return this.ventasService.obtenerVentaPorId(id);
+  }
+
+  @Get(':id/detalles')
+  @ApiResponse({ status: 200, description: 'Detalles de una venta específica' })
+  @ApiResponse({ status: 404, description: 'Venta no encontrada' })
+  async obtenerVentaDetalles(@Param('id', ParseIntPipe) id: number) {
+    return this.ventasService.obtenerVentaDetalles(id);
   }
 }
