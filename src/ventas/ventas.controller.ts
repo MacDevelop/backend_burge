@@ -27,43 +27,16 @@ export class VentasController {
     return this.ventasService.obtenerVentas();
   }
 
+  @Get('reportes')
+  @ApiResponse({ status: 200, description: 'Reporte de ventas diario y mensual' })
+  async obtenerReportes() {
+    return this.ventasService.generarReportes();
+  }
+
   @Get(':id')
   @ApiResponse({ status: 200, description: 'Detalle de una venta específica' })
   @ApiResponse({ status: 404, description: 'Venta no encontrada' })
   async obtenerVentaPorId(@Param('id') id: number): Promise<Venta> {
     return this.ventasService.obtenerVentaPorId(id);
-  }
-
-  @Get(':id/detalles')
-  @ApiResponse({ status: 200, description: 'Detalles de una venta específica' })
-  @ApiResponse({ status: 404, description: 'Detalles no encontrados' })
-  async obtenerVentaDetalles(@Param('id') id: number) {
-    return this.ventasService.obtenerVentaDetalles(id);
-  }
-
-  @Post()
-  @ApiResponse({ status: 201, description: 'Venta creada exitosamente' })
-  @ApiResponse({ status: 400, description: 'Datos inválidos o error de stock' })
-  async crearVenta(@Body() createVentaDto: CreateVentaDto): Promise<Venta> {
-    return this.ventasService.crearVenta(createVentaDto);
-  }
-
-  @Delete(':id')
-  @ApiResponse({ status: 200, description: 'Venta anulada exitosamente' })
-  @ApiResponse({ status: 404, description: 'Venta no encontrada' })
-  @ApiResponse({ status: 400, description: 'La venta ya está anulada' })
-  @ApiResponse({ status: 500, description: 'Error al anular la venta' })
-  async anularVentaPorId(
-    @Param('id', ParseIntPipe) id: number,
-  ): Promise<Venta> {
-    return this.ventasService.anularVenta(id);
-  }
-
-  @Delete('eliminar/:id')
-  @ApiResponse({ status: 200, description: 'Venta eliminada exitosamente' })
-  @ApiResponse({ status: 404, description: 'Venta no encontrada' })
-  @ApiResponse({ status: 500, description: 'Error al eliminar la venta' })
-  async eliminarVentaPorId(@Param('id', ParseIntPipe) id: number) {
-    return this.ventasService.eliminarVenta(id);
   }
 }

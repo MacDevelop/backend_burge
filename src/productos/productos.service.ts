@@ -46,7 +46,8 @@ export class ProductosService {
       urlImagen: createProductoDto.urlImagen?.trim(),
       categoria: { id: createProductoDto.idCategoria } as Categoria,
     });
-    return this.productosRepository.save(producto);
+    const savedProducto = await this.productosRepository.save(producto);
+    return this.findOne(savedProducto.id);
   }
 
   async findAll(): Promise<Producto[]> {
@@ -123,7 +124,8 @@ export class ProductosService {
         id: updateProductoDto.idCategoria,
       } as Categoria;
     }
-    return this.productosRepository.save(actualizarProducto);
+    const savedProducto = await this.productosRepository.save(actualizarProducto);
+    return this.findOne(savedProducto.id);
   }
 
   async remove(id: number) {

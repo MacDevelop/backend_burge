@@ -24,7 +24,7 @@ export class Producto {
   @Column('varchar', { length: 200, nullable: false })
   descripcion: string;
 
-  @Column('decimal', { name: 'precio_unitario', precision: 10, scale: 2 })
+  @Column('decimal', { name: 'precio_unitario', precision: 10, scale: 2, nullable: true })
   @Transform(({ value }) => parseFloat(value))
   precioUnitario: number;
 

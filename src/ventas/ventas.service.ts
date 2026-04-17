@@ -5,7 +5,7 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource } from 'typeorm';
+import { Repository, DataSource, Between, Not } from 'typeorm';
 import { Venta } from './entities/venta.entity';
 import { DetalleVenta } from './entities/detalle_venta.entity';
 import { CreateVentaDto } from './dto/create-venta.dto';
@@ -72,6 +72,87 @@ export class VentasService {
     return venta.ventadetalles.map((detalle) =>
       plainToClass(DetalleVenta, detalle),
     );
+  }
+
+  async generarReportes() {
+    const hoy = new Date()
+    const inicioHoy = new Date(hoy)
+    inicioHoy.setHours(0, 0, 0, 0)
+    const finHoy = new Date(hoy)
+    finHoy.setHours(23, 59, 59, 999)
+
+    const inicioMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1, 0, 0, 0, 0)
+    const finMes = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0, 23, 59, 59, 999)
+
+    const reporteDiario = await this.generarReporteEnRango(inicioHoy, finHoy)
+    const reporteMensual = await this.generarReporteEnRango(inicioMes, finMes)
+
+    return {
+      diario: reporteDiario,
+      mensual: reporteMensual,
+    }
+  }
+
+  private async generarReporteEnRango(inicio: Date, fin: Date) {
+    const ventas = await this.ventaRepository.find({
+      where: {
+        fechaCreacion: Between(inicio, fin),
+        estado: Not('anulada'),
+      },
+      relations: ['ventadetalles', 'ventadetalles.producto'],
+    })
+
+    const totalIngresos = ventas.reduce(
+      (sum, venta) => sum + Number(venta.totalVenta),
+      0,
+    )
+
+    const productoMap = new Map<
+      number,
+      { nombre: string; cantidadVendida: number; totalVendido: number }
+    >()
+
+    for (const venta of ventas) {
+      if (!venta.ventadetalles) continue
+
+      for (const detalle of venta.ventadetalles) {
+        const producto = detalle.producto
+        const nombre = producto?.nombre || 'Producto desconocido'
+        const cantidad = Number(detalle.cantidad)
+        const subtotal = Number(detalle.subtotal)
+        const existente = productoMap.get(producto?.id ?? 0)
+
+        if (existente) {
+          existente.cantidadVendida += cantidad
+          existente.totalVendido += subtotal
+          productoMap.set(producto?.id ?? 0, existente)
+        } else {
+          productoMap.set(producto?.id ?? 0, {
+            nombre,
+            cantidadVendida: cantidad,
+            totalVendido: subtotal,
+          })
+        }
+      }
+    }
+
+    let hamburguesaMasVendida = {
+      nombre: 'Ninguno',
+      cantidadVendida: 0,
+      totalVendido: 0,
+    }
+
+    for (const producto of productoMap.values()) {
+      if (producto.cantidadVendida > hamburguesaMasVendida.cantidadVendida) {
+        hamburguesaMasVendida = { ...producto }
+      }
+    }
+
+    return {
+      totalIngresos: Number(totalIngresos.toFixed(2)),
+      ventasRealizadas: ventas.length,
+      hamburguesaMasVendida,
+    }
   }
 
   async crearVenta(createVentaDto: CreateVentaDto): Promise<Venta> {
@@ -232,8 +313,9 @@ export class VentasService {
       ) {
         throw error;
       }
+      const message = error instanceof Error ? error.message : String(error)
       throw new InternalServerErrorException(
-        'Error al procesar la venta: ' + error.message,
+        'Error al procesar la venta: ' + message,
       );
     } finally {
       await queryRunner.release();
@@ -317,8 +399,9 @@ export class VentasService {
       ) {
         throw error;
       }
+      const message = error instanceof Error ? error.message : String(error)
       throw new InternalServerErrorException(
-        'Error al anular la venta: ' + error.message,
+        'Error al anular la venta: ' + message,
       );
     } finally {
       await queryRunner.release();
