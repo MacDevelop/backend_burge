@@ -5,14 +5,16 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
+import { memoryStorage } from 'multer';
 import { ApiTags, ApiOperation, ApiConsumes, ApiBody } from '@nestjs/swagger';
+import { UploadsService } from './uploads.service';
 
 @ApiTags('uploads')
-@Controller('uploads') // ← Sin '/' al inicio
+@Controller('uploads')
 export class UploadsController {
-  @Post() // ← Sin ruta adicional, responde a POST /api/v1/uploads
+  constructor(private readonly uploadsService: UploadsService) {}
+
+  @Post()
   @ApiOperation({ summary: 'Subir un archivo de imagen' })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
@@ -30,14 +32,7 @@ export class UploadsController {
   })
   @UseInterceptors(
     FileInterceptor('file', {
-      // ← DEBE coincidir con fd.append('file', file)
-      storage: diskStorage({
-        destination: './uploads',
-        filename: (_req, file, cb) => {
-          const unique = Date.now() + '-' + Math.round(Math.random() * 1e9);
-          cb(null, unique + extname(file.originalname));
-        },
-      }),
+      storage: memoryStorage(),
       fileFilter: (_req, file, cb) => {
         if (!file.mimetype.startsWith('image/')) {
           console.log('Archivo rechazado, no es imagen');
@@ -48,7 +43,7 @@ export class UploadsController {
       limits: { fileSize: 5 * 1024 * 1024 },
     }),
   )
-  upload(@UploadedFile() file: Express.Multer.File) {
+  async upload(@UploadedFile() file: Express.Multer.File) {
     console.log('Archivo recibido en backend:', file);
 
     if (!file) {
@@ -56,10 +51,13 @@ export class UploadsController {
       return { url: null };
     }
 
-    const base = process.env.API_BASE_URL || 'http://localhost:3000';
-    const url = `${base}/uploads/${file.filename}`;
-    console.log('URL generada:', url);
-
-    return { url };
+    try {
+      const url = await this.uploadsService.uploadImage(file);
+      console.log('URL de Cloudinary:', url);
+      return { url };
+    } catch (error) {
+      console.error('Error subiendo a Cloudinary:', error);
+      return { url: null, error: (error as Error).message };
+    }
   }
 }
