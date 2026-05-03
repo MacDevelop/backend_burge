@@ -41,13 +41,13 @@ export class CreateVentaDto {
   @ApiProperty({
     description: 'Método de pago utilizado',
     example: 'efectivo',
-    enum: ['efectivo', 'tarjeta', 'transferencia', 'cotización', 'otro'],
+    enum: ['efectivo', 'tarjeta', 'transferencia', 'qr', 'cotización', 'otro'],
     default: 'efectivo',
   })
   @IsString({ message: 'El método de pago debe ser una cadena de texto' })
-  @IsEnum(['efectivo', 'tarjeta', 'transferencia', 'cotización', 'otro'], {
+  @IsEnum(['efectivo', 'tarjeta', 'transferencia', 'qr', 'cotización', 'otro'], {
     message:
-      'Método de pago inválido. Debe ser: efectivo, tarjeta, transferencia, cotización o otro',
+      'Método de pago inválido. Debe ser: efectivo, tarjeta, transferencia, qr, cotización o otro',
   })
   metodoPago: string;
 

@@ -26,7 +26,7 @@ export class Venta {
     type: 'varchar',
     length: 50,
     default: 'efectivo',
-    enum: ['efectivo', 'tarjeta', 'transferencia', 'cotización', 'otro'],
+    enum: ['efectivo', 'tarjeta', 'transferencia', 'qr', 'cotización', 'otro'],
   })
   metodoPago: string;
 
