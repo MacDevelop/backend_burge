@@ -18,8 +18,8 @@ import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 
 @ApiTags('Roles')
-@ApiBearerAuth()
-@UseGuards(JwtAuthGuard, RolesGuard)
+//@ApiBearerAuth()
+//@UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('Administrador')
 @Controller('roles')
 export class RolesController {
