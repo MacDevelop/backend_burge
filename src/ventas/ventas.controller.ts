@@ -13,10 +13,13 @@ import { VentasService } from './ventas.service';
 import { CreateVentaDto } from './dto/create-venta.dto';
 import { Venta } from './entities/venta.entity';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { Roles } from 'src/auth/decorators/roles.decorator';
 
 @ApiTags('Ventas')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('Administrador', 'Cajero')
 @Controller('ventas')
 export class VentasController {
   constructor(private readonly ventasService: VentasService) {}
@@ -52,5 +55,12 @@ export class VentasController {
   @ApiResponse({ status: 404, description: 'Venta no encontrada' })
   async obtenerVentaDetalles(@Param('id', ParseIntPipe) id: number) {
     return this.ventasService.obtenerVentaDetalles(id);
+  }
+
+  @Delete('eliminar/:id')
+  @Roles('Administrador')
+  @ApiResponse({ status: 200, description: 'Venta eliminada correctamente' })
+  async eliminarVenta(@Param('id', ParseIntPipe) id: number): Promise<void> {
+    return this.ventasService.eliminarVenta(id);
   }
 }

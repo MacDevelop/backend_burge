@@ -20,6 +20,7 @@ export class Categoria {
   @Column('varchar', { length: 255, nullable: true })
   descripcion: string;
 
+  //Columnas de auditoria
   @CreateDateColumn({ name: 'fecha_creacion' })
   fechaCreacion: Date;
 

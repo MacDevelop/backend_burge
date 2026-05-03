@@ -62,16 +62,6 @@ export class UsuariosService {
     const usuario = await this.usuariosRepository.findOne({
       where: { id },
       relations: ['rol', 'empleado'],
-      select: [
-        'id',
-        'idEmpleado',
-        'idRol',
-        'nombreUsuario',
-        'email',
-        'fechaCreacion',
-        'fechaModificacion',
-        'fechaEliminacion',
-      ],
     });
     if (!usuario) {
       throw new NotFoundException(`El usuario ${id} no existe`);
